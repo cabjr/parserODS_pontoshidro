@@ -31,7 +31,15 @@ def generate_odsFile(matrix):
     data = OrderedDict()
     for item in range(len(matrix)):
         lastAux = np.array(matrix[item])
-        data.update({matrix[item][0][0]: lastAux.tolist() })
+        newList = lastAux.tolist()
+        nl = []
+        for i in range(len(newList)):
+            el= []
+            for j in range(len(newList[i])):
+                if type(newList[i][j]) is str:
+                    el.append(newList[i][j].replace('.',',').replace('nan',''))
+            nl.append(el)
+        data.update({matrix[item][0][0]: nl })
     save_data("resultado.ods", data)        
 
 ## profundidade, largura, área, vazão (veloc * area) 
@@ -39,18 +47,38 @@ def generate_odsFile(matrix):
 ## média profundida, máximo largura
 
 
+def generate_csv(matrix):
+    csvText = ''
+    for item in range(len(matrix)):
+        lastAux = np.array(matrix[item])
+        newList = lastAux.tolist()
+        for i in range(len(newList)):
+            for j in range(len(newList[i])):
+                if i == len(newList):
+                    csvText += newList[i][j].replace('.',',').replace('nan','')
+                else:
+                    csvText += newList[i][j].replace('.',',').replace('nan','') + ';'
+            csvText+= '\n'
+        csvText+= ';;;\n'
+    file1 = open("resultados.csv","w") 
+    file1.write(csvText)
+    file1.close() 
+    print(csvText)
+
 if (len(sys.argv)==0 or len(sys.argv)==1):
     print('Favor Inserir o nome do arquivo a ser processado')
 elif (len(sys.argv)==2):
-    pedido = read_ods(sys.argv[1], 0, columns=["profundidade", "largura", "area"], headers=False)
+    pedido = read_ods(sys.argv[1], 1, columns=["profundidade", "largura", "area"], headers=False)
     matrixes = []
     aux = []
     for i in range(len(pedido['profundidade'])):
-        if 'PY-' in str(pedido['profundidade'][i]):
+        if 'PY-' in str(pedido['profundidade'][i]) or '-' in str(pedido['profundidade'][i]):
             if (len(aux)>0):
                 matrixes.append(aux)
                 aux = []
         aux.append([pedido['profundidade'][i], pedido['largura'][i], pedido['area'][i]])
     matrixes.append(aux)
-    generate_odsFile(iterate_over_matrix(matrixes))
+    print(matrixes)
+    #generate_odsFile(iterate_over_matrix(matrixes))
+    generate_csv(iterate_over_matrix(matrixes))
     print('Arquivo resultado.ods gerado com sucesso.')
